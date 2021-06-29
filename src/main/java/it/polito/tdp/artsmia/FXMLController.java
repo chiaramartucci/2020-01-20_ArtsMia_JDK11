@@ -1,8 +1,10 @@
 package it.polito.tdp.artsmia;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.artsmia.model.Adiacenza;
 import it.polito.tdp.artsmia.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,7 +33,7 @@ public class FXMLController {
     private Button btnCalcolaPercorso;
 
     @FXML
-    private ComboBox<?> boxRuolo;
+    private ComboBox<String> boxRuolo;
 
     @FXML
     private TextField txtArtista;
@@ -41,17 +43,52 @@ public class FXMLController {
 
     @FXML
     void doArtistiConnessi(ActionEvent event) {
-
+    	String ruolo = this.boxRuolo.getValue();
+    	if(ruolo == null) {
+    		txtResult.appendText("errore: seleziona un ruolo"+"\n");
+    	}
+    	
+    	if(model.getGrafo()!= null) {
+    		for(Adiacenza a : model.getCoppiePeso(ruolo)) {
+    			txtResult.appendText(a.toString()+"\n");
+    		}
+    	}
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
-
+    	txtResult.clear();
+    	Integer id = 0;
+    	try {
+    		id = Integer.parseInt(this.txtArtista.getText());
+    	} catch (NumberFormatException e) {
+    		txtResult.appendText("Errore: inserire un formato corretto");
+    	}
+    	
+    	if(this.model.getNomeArtista(id)!= null) {
+    		List<Integer> percorso = this.model.trovaCammino(id);
+    		txtResult.appendText("Percorso più lungo: "+percorso.size()+" con peso che massimizza: "+this.model.getLunghezzaMassima()+"\n");
+    		for(Integer v : percorso) {
+    			txtResult.appendText(v+ " ");
+    		}
+    	}
+    	else {
+    		txtResult.appendText("Errore: artista non esistente!");
+    	}
+    
     }
-
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	String ruolo = this.boxRuolo.getValue();
+    	if(ruolo == null) {
+    		txtResult.appendText("errore: seleziona un ruolo"+"\n");
+    	}
+    	
+    	this.model.creaGrafo(ruolo);
+    	txtResult.appendText("numero vertici: "+this.model.getGrafo().vertexSet().size()+"\n");
+    	txtResult.appendText("numero archi: "+this.model.getGrafo().edgeSet().size()+"\n");
+   
+    	btnCalcolaPercorso.setDisable(false);
     }
 
     @FXML
@@ -67,6 +104,8 @@ public class FXMLController {
 
 	public void setModel(Model model) {
 		this.model = model;
+		this.boxRuolo.getItems().addAll(model.getRoles());
+		btnCalcolaPercorso.setDisable(true);
 	}
 }
 
